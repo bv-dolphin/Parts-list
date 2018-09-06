@@ -5,16 +5,15 @@ import com.example.parts_list.repository.PartRepository;
 import com.example.parts_list.service.PartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
@@ -32,14 +31,20 @@ public class PartController {
     @GetMapping(path = "")
     public String partsList(
             @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "Все компоненты") String sorted,
             Model model
     ){
         int pageNumber = page > 0 ? page - 1 : 0;
+       /* List<Part> partList = PART_REPOSITORY
+                .findAll().stream().filter(Part::isNeed).collect(Collectors.toCollection(ArrayList::new));*/
         List<Part> parts = PART_REPOSITORY
                 .findAll(PageRequest.of(pageNumber, 10))
                 .stream()
                 .collect(Collectors.toCollection(ArrayList::new));
+
         model.addAttribute("partsList", parts);
+        int computerCompleteCount = PART_SERVICE.computerCompleteCount();
+        model.addAttribute("computerCompleteCount", computerCompleteCount);
         return "parts_list";
     }
 
@@ -50,21 +55,26 @@ public class PartController {
 
     @PostMapping(path = "/add_part")
     public String addPartComplete(
-            @Valid Part part,
-            @RequestParam @NotBlank(message = "Select the field value.") String need,
+            @Valid  Part part,
+            @RequestParam String needed,
             BindingResult bindingResult,
             Model model
-    ){
-        if(bindingResult.hasErrors()){
+            )  {
+
+        boolean isEmptyNeeded = StringUtils.isEmpty(needed);
+        if (isEmptyNeeded){
+            model.addAttribute("neededError", "Please take 'Да' or 'Нет'.");
+        }
+        if(isEmptyNeeded || bindingResult.hasErrors()){
             Map<String, String> errorsMap = ControllerUtils.getErrors(bindingResult);
             model.mergeAttributes(errorsMap);
-            model.addAttribute("part", part);
             return "add_part";
         }
-        if(!PART_SERVICE.create(part, need)){
-            model.addAttribute("partIsAdded", "A part with this name has already been added.");
+            if (!PART_SERVICE.create(part, needed, model )) {
             return "add_part";
         }
+            PART_REPOSITORY.save(part);
+
         return "redirect:/parts_list";
     }
 
@@ -75,40 +85,34 @@ public class PartController {
         PART_REPOSITORY.delete(part);
         return "redirect:/parts_list";
     }
+
     @GetMapping(path = "/edition/{id}")
     public String editionPart(
             @PathVariable Long id,
                               Model model
     ) {
-        Part part = PART_REPOSITORY.getOne(id).get();
-        try{
+        Optional<Part> partOptional = PART_REPOSITORY.getOne(id);
+        if(partOptional.isPresent()) {
+            Part part = partOptional.get();
             model.addAttribute("partName", part.getName());
             model.addAttribute("countParts", part.getQuantityInStock());
             model.addAttribute("needed", part.isNeed() ? "Да" : "Нет");
-        } catch (Exception e){
-            e.printStackTrace();
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute("part", part);
         }
-        model.addAttribute("part", part);
         return "edition";
     }
 
     @PostMapping(path = "/edition/{id}")
     public String editionComplete(
             @RequestParam String name,
-            @RequestParam int quantityInStock,
-            @RequestParam String need,   //Под вопросом
+            @RequestParam int  quantityInStock,
+            @RequestParam String needed,
             @PathVariable Long id,
-            BindingResult bindingResult,
             Model model
     ){
-        if (bindingResult.hasErrors()){
-            Map<String, String> errorsMap = ControllerUtils.getErrors(bindingResult);
-            model.mergeAttributes(errorsMap);
-            return "/parts_list/edition/{id}";
-        }
-        if(!PART_SERVICE.update(id, name, quantityInStock, need)) {
-            return "/parts_list/edition/{id}";
+        if(!PART_SERVICE.update(id, name, quantityInStock, needed, model)) {
+            model.addAttribute("partIsAdded",  "Part with this name is already added!");
+            return "edition";
         }
         return "redirect:/parts_list";
     }

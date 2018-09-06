@@ -4,18 +4,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
+import java.util.Objects;
 
 @Entity
 public class Part {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @NotBlank(message = "Please fill name.")
     private String name;
-    @Pattern(regexp = "^\\d{1,10}$", message = "Error enter.")
-    @NotBlank(message = "Please fill quantity parts in stock.")
     private int quantityInStock;
     private boolean need;
 
@@ -49,5 +45,20 @@ public class Part {
 
     public void setNeed(boolean need) {
         this.need = need;
+
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Part part = (Part) o;
+        return id == part.id &&
+                Objects.equals(name, part.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
     }
 }

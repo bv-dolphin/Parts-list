@@ -6,9 +6,9 @@
                 <span class="sr-only">Previous</span>
             </a>
         </li>
-        <li class="page-item"><a class="page-link" href="/books?page=1">1</a></li>
-        <li class="page-item"><a class="page-link" href="/books?page=2">2</a></li>
-        <li class="page-item"><a class="page-link" href="/books?page=3">3</a></li>
+        <li class="page-item"><a class="page-link" href="/parts_list/?page=1">1</a></li>
+        <li class="page-item"><a class="page-link" href="/parts_list/?page=2">2</a></li>
+        <li class="page-item"><a class="page-link" href="/parts_list/?page=3">3</a></li>
         <li class="page-item">
             <a class="page-link" <#--href="/books?page=${page + 1}"--> aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
