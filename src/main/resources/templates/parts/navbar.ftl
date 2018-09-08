@@ -15,8 +15,8 @@
         </ul>
     </div>
     <!-- Search form -->
-    <form class="form-inline">
-        <input class="form-control mr-sm-2" type="search" placeholder="Поиск по таблице" aria-label="Search">
+    <form class="form-inline" <#--action="/parts_list/" method="get"-->>
+        <input class="form-control mr-sm-2" type="search" name="search" value="${search?ifExists}" placeholder="Поиск по таблице" aria-label="Search">
         <button class="btn btn-light my-2 my-sm-0" type="submit"><i>Искать</i></button>
     </form>
 </nav>

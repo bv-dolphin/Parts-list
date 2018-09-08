@@ -1,24 +1,29 @@
 <#macro table path isEditForm isAddForm>
 <#if !isEditForm && !isAddForm>
-<div class="row">
+<div class="row" xmlns="http://www.w3.org/1999/html">
     <div class="col"><#include "pagination.ftl"></div>
-    <div class="col"></div>
-    <div class="col"></div>
     <div class="col">
-        <select class="form-control" name="sorted">
-                  <option selected>Все компоненты</option>
-            <option>Необходимые компоненты</option>
-                          <option>Опциональные компоненты</option>
-    </select>
+        <form method="get">
+            <select class="form-control" name="sorted">
+                <option selected>Все компоненты</option>
+                <option>Необходимые компоненты</option>
+                <option>Опциональные компоненты</option>
+            </select>
     </div>
+    <div class="col">
+        <button type="submit" class="btn btn-light">Фильтровать</button>
+        </form>
+    </div>
+    <div class="col"></div>
+
     <div class="col"><a href="/parts_list/add_part" class="btn btn-outline-info">Добавить компонент</a></div>
 </div>
 
 </#if>
-<table class="table">
+<table class="table" id="tableParts">
     <thead>
     <#if !isEditForm && !isAddForm>
-    <h1 align="center"><span class="about">Список компонентов</span></h1>
+        <h1 align="center"><span class="about">Список компонентов</span></h1>
     <#else>
     <form class="form-inline">
         <div class="form-group">
@@ -57,7 +62,7 @@
             <div class="col-8">
     <form method="post">
       <tr>
-          <th scope="row"><#if isEditForm>${part.id}<#else >#</#if></th>
+          <th scope="row"><#if isEditForm>${part.id}<#else>#</#if></th>
 
           <td><div class="form-group">
               <input type="text" name="name" class="form-control ${(partIsError??)?string('is-invalid', ' ')}"

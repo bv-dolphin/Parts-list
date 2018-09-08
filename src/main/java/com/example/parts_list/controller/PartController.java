@@ -1,11 +1,7 @@
 package com.example.parts_list.controller;
 
 import com.example.parts_list.entity.Part;
-import com.example.parts_list.repository.PartRepository;
 import com.example.parts_list.service.PartService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -13,36 +9,32 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/parts_list")
 public class PartController {
     private final PartService PART_SERVICE;
-    private final PartRepository PART_REPOSITORY;
-
-    @Autowired
-    public PartController(PartService partService, PartRepository partRepository) {
+    public PartController(PartService partService) {
         this.PART_SERVICE = partService;
-        this.PART_REPOSITORY = partRepository;
     }
 
     @GetMapping(path = "")
     public String partsList(
-            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "Все компоненты") String sorted,
+            @RequestParam(required = false, defaultValue = "") String search,
             Model model
     ){
-        int pageNumber = page > 0 ? page - 1 : 0;
-       /* List<Part> partList = PART_REPOSITORY
-                .findAll().stream().filter(Part::isNeed).collect(Collectors.toCollection(ArrayList::new));*/
-        List<Part> parts = PART_REPOSITORY
-                .findAll(PageRequest.of(pageNumber, 10))
-                .stream()
-                .collect(Collectors.toCollection(ArrayList::new));
+        List<Part> parts = PART_SERVICE.getPartList(sorted, search, page);
 
         model.addAttribute("partsList", parts);
+        model.addAttribute("search", search);
+        model.addAttribute("sorted", sorted);
+        model.addAttribute("page", page);
+
         int computerCompleteCount = PART_SERVICE.computerCompleteCount();
         model.addAttribute("computerCompleteCount", computerCompleteCount);
         return "parts_list";
@@ -73,16 +65,13 @@ public class PartController {
             if (!PART_SERVICE.create(part, needed, model )) {
             return "add_part";
         }
-            PART_REPOSITORY.save(part);
-
         return "redirect:/parts_list";
     }
 
 
     @PostMapping(path = "/delete/{id}")
     public String deletePart(@PathVariable Long id){
-        Part part = PART_REPOSITORY.getOne(id).get();
-        PART_REPOSITORY.delete(part);
+        PART_SERVICE.delete(id);
         return "redirect:/parts_list";
     }
 
@@ -91,7 +80,7 @@ public class PartController {
             @PathVariable Long id,
                               Model model
     ) {
-        Optional<Part> partOptional = PART_REPOSITORY.getOne(id);
+        Optional<Part> partOptional = PART_SERVICE.getPart(id);
         if(partOptional.isPresent()) {
             Part part = partOptional.get();
             model.addAttribute("partName", part.getName());
@@ -101,6 +90,8 @@ public class PartController {
         }
         return "edition";
     }
+
+
 
     @PostMapping(path = "/edition/{id}")
     public String editionComplete(

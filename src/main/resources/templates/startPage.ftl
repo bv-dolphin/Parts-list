@@ -2,5 +2,5 @@
 
 <@c.page>
 <h5>Hello, die!</h5>
-<div>Это моё первое приложение на java</div>
+<div></div>
 </@c.page>
